@@ -1,4 +1,7 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
+import 'InputBox.dart';                     //  the separate, re-usable widget
 
 //  This code is literally from the "flutter create" boilerplate,
 //  but I removed the counter app (and kept the underlying structure).
@@ -14,14 +17,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      home: const MyHomePage(title: 'Flutter Logo Demo'),
+      home: MyHomePage(title: 'Callback Demo'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -30,34 +32,73 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  
-  // final inputBox = GlobalKey<_InputBoxState>();
-  String label = 'apple';
+
+  //  This is where the magic happens...
+  //  This parent widget has 3 children, each one
+  //  is an InputBox widget.
+
+  //  It takes the value entered into each, and updates the UI
+  //  in real time to reveal the data as entered...
+
+  List<String> vals = ['','',''];         //  an array of the stuff entered in the text fields
+  final String nada = '<< nada >>';       //  display this when vals is empty
+  String all_vals = '';                   //  display this in the UI (it is all entered stuff, comma separated)
+
+  void generateUI( BuildContext context ) {
+    //  show all of the stuff entered as a combined string
+    String str = vals[0] + ', ' + vals[1] + ', ' + vals[2];
+    //  if nothing entered, show "nada"
+    if( str == ', , ') str = nada;
+    setState(() {
+      all_vals = str;
+    });
+  }
+
+  @override
+  void initState() {
+    all_vals = nada;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: Text( widget.title ),
+          centerTitle: true,
+        ),
         body: Container(
           width: double.infinity,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              InputBox( label, ( value ) { 
-                  label = value; 
-                  setState(() {
-                    
-                  });
+              InputBox( 'Fruit', ( value ) { 
+                  vals[0] = value; 
+                  generateUI( context);
                 } 
               ),
-              Text('list of fruits'),
-              ElevatedButton(
-                onPressed: () {
-                  //InputBox.kkey[1]
-
-                },
-                child: Text( label ),
+              InputBox( 'Animal', ( value ) { 
+                  vals[1] = value; 
+                  generateUI( context); 
+                } 
+              ),  
+              InputBox( 'Color', ( value ) { 
+                  vals[2] = value; 
+                  generateUI( context); 
+                } 
+              ), 
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0,12,0,0),
+                child: Text('entered data:'),
               ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text( all_vals,
+                  style: TextStyle( fontSize: 24) ),
+              ),              
             ]
           ),
         ),  
@@ -66,43 +107,3 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class InputBox extends StatefulWidget {
-  
-  InputBox( String this.lbl, this.changedValue );
-  String lbl;
-  Function(String value) changedValue;
-
-  @override
-  State<InputBox> createState() => _InputBoxState();
-}
-
-class _InputBoxState extends State<InputBox> {
-
-  final controller1 = TextEditingController();
-  String new_val = '';
-
-  @override
-  void dispose() {
-    controller1.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextField(
-        controller: controller1,
-        onChanged: (text) { 
-          new_val = controller1.text; 
-          widget.changedValue( new_val );
-          print('>>> ${ controller1.text.toString() }'); 
-        },
-        decoration: InputDecoration(
-          border: OutlineInputBorder(),
-          //labelText: 'Password',
-        ),
-      ),
-    );
-  }
-}
